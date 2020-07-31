@@ -1,0 +1,21 @@
+{
+  "name": "holdem",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "debug": "nodemon src/app.js -e js,html,css"
+  },
+  "keywords": [],
+  "author": "Jeffrey Yan",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "lodash": "^4.17.19"
+  },
+  "devDependencies": {
+    "expect": "^26.1.0",
+    "nodemon": "^2.0.4"
+  }
+}
