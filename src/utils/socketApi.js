@@ -1,6 +1,7 @@
 const socketApi = {
     PLAYERS: 's_players',
-    IS_FIRST: 's_isFirst',
+    JOIN_SUCCESS: 's_join_success',
+    JOIN_FAILED: 's_join_failed',
     PLAY: 's_play'
 }
 

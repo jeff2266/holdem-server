@@ -12,10 +12,6 @@ const io = socketio(server)
 
 const port = process.env.PORT || 3001
 
-function emitPlay() {
-    io.emit('s_play', playerManager.getPlayers())
-}
-
 io.on('connection', (client) => {
     console.log(`Connection from ${client.id}...`)
     // Pass current players to client
@@ -27,11 +23,15 @@ io.on('connection', (client) => {
         if (password === 'queensfulloftens') {
             const playerID = playerManager.addPlayer(name, client.id)
             if (playerID < 0) {
-                client.emit('joinFailed')
+                client.emit(socketApi.JOIN_FAILED)
                 return
             }
             console.log(`Player ${playerID}: ${name} has joined...`)
-            if (playerID === 0) client.emit(socketApi.IS_FIRST)
+            if (playerID === 0) {
+                console.log(socketApi.JOIN_SUCCESS)
+                client.emit(socketApi.JOIN_SUCCESS, true)
+            }
+            else client.emit(socketApi.JOIN_SUCCESS)
             io.emit(socketApi.PLAYERS, playerManager.getPlayers())
         }
     })
