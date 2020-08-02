@@ -29,15 +29,20 @@ io.on('connection', (client) => {
             console.log(`Player ${playerID}: ${name} has joined...`)
             if (playerID === 0) {
                 console.log(socketApi.JOIN_SUCCESS)
+
+                // Tell client he is first player
                 client.emit(socketApi.JOIN_SUCCESS, true)
             }
+            // Otherwise, just tell client he joined successfully
             else client.emit(socketApi.JOIN_SUCCESS)
             io.emit(socketApi.PLAYERS, playerManager.getPlayers())
         }
     })
 
     client.on('c_play', () => {
+        // TODO implement loading? (io.emit(socketApi.LOADING))
 
+        io.emit(socketApi.PLAY)
     })
 
     client.on('disconnect', () => {
