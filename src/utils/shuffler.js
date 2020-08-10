@@ -21,7 +21,8 @@ function Card(newSuit, newValue) {
  */
 function newDeck() {
     let deck = []
-    Object.keys(suits).forEach((x) => {
+
+    Object.keys(suits).slice(0, 4).forEach((x) => {
         Object.keys(values).forEach((y) => {
             deck.push(new Card(x, y))
         })

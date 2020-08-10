@@ -14,13 +14,7 @@ function deletePlayer(id) {
     return true
 }
 
-function getPlayers(startAt = '') {
-    let names = players.map(x => x.name)
-    if (startAt) {
-        const startAtIndex = names.indexOf(startAt)
-        if (startAtIndex < 0) return
-        return names.slice(startAtIndex, names.length).concat(names.slice(0, startAtIndex))
-    }
+function getPlayers() {
     return players.map(x => x.name)
 }
 
