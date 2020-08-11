@@ -8,6 +8,7 @@ const gameStates = {
         message: () => "Shuffling and setting blinds",
         onEnter: () => {
             updateBlinds()
+            resetTurn()
             deck = newDeck()
             console.log(deck)
         }
@@ -22,6 +23,7 @@ const gameStates = {
                 big.bet += minBet
                 pots[pots.length] += minBet
             } else {
+                // BB all in after blind
 
             }
             if (small.balance > (minBet / 2)) {
@@ -29,9 +31,9 @@ const gameStates = {
                 small.bet += (minBet / 2)
                 pots[pots.length] += (minBet / 2)
             } else {
+                // SB all in after blind
 
             }
-
         }
     },
     DEAL: {
@@ -50,12 +52,8 @@ const gameStates = {
             const big = playerStates.findIndex(x => x.blind.includes('B'))
             if (big > -1) {
                 const iAction = (big + 1) % playerStates.length
-                playerStates[iAction].isTurn = true
+                resetTurn(iAction)
             }
-        },
-        playerChecks: (name) => {
-            const checkingPlayer = playerStates.findIndex((x) => x.name === name)
-
         }
     },
     FLOP: {},
@@ -73,6 +71,7 @@ let gameState = gameStates.WELCOME
 let window = []
 let minBet = null
 let playerStates = []
+let firstAction
 
 let deck
 let pots = []
@@ -120,14 +119,35 @@ function newGame(players) {
 }
 
 function updateBlinds() {
-    if (!playerStates.find(x => x.blind.includes('D'))) {
+    let iBlinds
+    if ((iBlinds = playerStates.findIndex(x => x.blind.includes('D'))) < 0) {
         let i = 0
         playerStates[i++].blind.push('D')
-        playerStates[i++].blind.push('B')
-        playerStates[i++ % playerStates.length].blind.push('S')
+        while (playerStates[i] === null) i = (i + 1) % playerStates.length
+        playerStates[i].blind.push('S')
+        i = (i + 1) % playerStates.length
+        while (playerStates[i] === null) i = (i + 1) % playerStates.length
+        playerStates[i].blind.push('B')
     } else {
-
+        playerStates.forEach(x => { if (x !== null) x.blind = [] })
+        do {
+            iBlinds = (iBlinds + 1) % playerStates.length
+        } while (playerStates[iBlinds] === null)
+        playerStates[iBlinds].bets.push('D')
+        do {
+            iBlinds = (iBlinds + 1) % playerStates.length
+        } while (playerStates[iBlinds] === null)
+        playerStates[iBlinds].bets.push('S')
+        do {
+            iBlinds = (iBlinds + 1) % playerStates.length
+        } while (playerStates[iBlinds] === null)
+        playerStates[iBlinds].bets.push('B')
     }
+}
+
+function resetTurn(iNextPlayer = null) {
+    playerStates.forEach(x => x.isTurn = false)
+    if (iNextPlayer !== null) playerStates[iNextPlayer].isTurn = true
 }
 
 function getGuiState(forPlayer = '') {
