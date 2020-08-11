@@ -19,12 +19,14 @@ const gameStates = {
             const small = playerStates.find(x => x.blind.includes('S'))
             if (big.balance > minBet) {
                 big.balance -= minBet
+                big.bet += minBet
                 pots[pots.length] += minBet
             } else {
 
             }
             if (small.balance > (minBet / 2)) {
                 small.balance -= (minBet / 2)
+                small.bet += (minBet / 2)
                 pots[pots.length] += (minBet / 2)
             } else {
 
@@ -50,6 +52,10 @@ const gameStates = {
                 const iAction = (big + 1) % playerStates.length
                 playerStates[iAction].isTurn = true
             }
+        },
+        playerChecks: (name) => {
+            const checkingPlayer = playerStates.findIndex((x) => x.name === name)
+
         }
     },
     FLOP: {},

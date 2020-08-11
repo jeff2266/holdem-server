@@ -10,12 +10,12 @@ function addPlayer(name, id) {
 function deletePlayer(id) {
     const iDelete = players.map(x => x.id).indexOf(id)
     if (iDelete < 0) return
-    players.splice(iDelete)
-    return true
+    players.splice(iDelete, 1)
+    return iDelete
 }
 
 function getPlayers() {
-    return players.map(x => x.name)
+    return players
 }
 
 module.exports = { addPlayer, deletePlayer, getPlayers }

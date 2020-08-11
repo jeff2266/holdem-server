@@ -16,7 +16,7 @@ const port = process.env.PORT || 3001
 io.on('connection', (client) => {
     console.log(`Connection from ${client.id}...`)
     // Pass current players to client
-    client.emit(socketApi.PLAYERS, playerManager.getPlayers())
+    client.emit(socketApi.PLAYERS, playerManager.getPlayers().map(x => x.name))
 
     client.on('c_join', ({ name, password }) => {
 
@@ -33,7 +33,7 @@ io.on('connection', (client) => {
                 // Tell client he is first player
                 client.emit(socketApi.JOIN_SUCCESS, true, name)
             } else client.emit(socketApi.JOIN_SUCCESS, false, name)
-            io.emit(socketApi.PLAYERS, playerManager.getPlayers())
+            io.emit(socketApi.PLAYERS, playerManager.getPlayers().map(x => x.name))
         }
     })
 
@@ -43,7 +43,7 @@ io.on('connection', (client) => {
             return
         }
         // TODO implement loading? (io.emit(socketApi.LOADING))
-        gameStateManager.newGame(playerManager.getPlayers())
+        gameStateManager.newGame(playerManager.getPlayers().map(x => x.name))
         io.emit(socketApi.PLAY)
 
         io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
@@ -64,13 +64,23 @@ io.on('connection', (client) => {
                 }, 2800)
             }, 2800)
         }, 4000)
+
+
     })
 
     client.on('disconnect', () => {
         console.log(`${client.id} has disconnected...`)
-        if (playerManager.deletePlayer(client.id)) {
-            console.log(`${client.id} deleted from players...`)
-            io.emit(socketApi.PLAYERS, playerManager.getPlayers())
+        let iDelete
+        if ((iDelete = playerManager.deletePlayer(client.id)) !== undefined) {
+            console.log(`${client.id}, ${iDelete} deleted from players...`)
+            io.emit(socketApi.PLAYERS, playerManager.getPlayers().map(x => x.name))
+            if (iDelete === 0) {
+                const currentPlayers = playerManager.getPlayers()
+                if (!currentPlayers) return
+                const clientNewFirstPlayer = currentPlayers[0]
+                io.to(clientNewFirstPlayer.id).emit(socketApi.JOIN_SUCCESS, true, clientNewFirstPlayer.name)
+                console.log(`${clientNewFirstPlayer.id}, ${clientNewFirstPlayer.name} is the new first player...`)
+            }
         }
     })
 
