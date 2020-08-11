@@ -76,7 +76,7 @@ io.on('connection', (client) => {
             io.emit(socketApi.PLAYERS, playerManager.getPlayers().map(x => x.name))
             if (iDelete === 0) {
                 const currentPlayers = playerManager.getPlayers()
-                if (!currentPlayers) return
+                if (currentPlayers[0]) return
                 const clientNewFirstPlayer = currentPlayers[0]
                 io.to(clientNewFirstPlayer.id).emit(socketApi.JOIN_SUCCESS, true, clientNewFirstPlayer.name)
                 console.log(`${clientNewFirstPlayer.id}, ${clientNewFirstPlayer.name} is the new first player...`)
