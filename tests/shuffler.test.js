@@ -5,8 +5,6 @@ const { suits } = require('../src/utils/cards')
 
 const newDeck = shuffler()
 
-console.log(newDeck)
-
 expect(
     newDeck.length
 ).toEqual(52)

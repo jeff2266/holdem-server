@@ -52,31 +52,66 @@ io.on('connection', (client) => {
             gameStateManager.setGameState(gameStateManager.gameStates.SHUFFLE_AND_BLINDS_SET)
             io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
             setTimeout(() => {
-                gameStateManager.setGameState(gameStateManager.gameStates.PLACE_BLINDS)
+                gameStateManager.setGameState(gameStateManager.gameStates.DEAL)
                 io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
                 setTimeout(() => {
-                    gameStateManager.setGameState(gameStateManager.gameStates.DEAL)
+                    gameStateManager.setGameState(gameStateManager.gameStates.PLACE_BLINDS)
                     io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
                     setTimeout(() => {
                         gameStateManager.setGameState(gameStateManager.gameStates.ACTION_PRE_FLOP)
                         io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
-                    }, 1500)
-                }, 2800)
+                    }, 2800)
+                }, 1500)
             }, 2800)
         }, 4000)
+    })
 
+    client.on('c_action', (amount) => {
+        const playerName = playerManager.getPlayers().find(x => x.id === client.id).name
+        const nextState = gameStateManager.playerAction(playerName, amount)
+        switch (nextState) {
+            case -1:
+                return
+            case 0:
+                io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
+                return
+            default:
+                gameStateManager.setGameState(nextState)
+                io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
+                break
+        }
+        switch (gameStateManager.getGameState()) {
+            case gameStateManager.gameStates.FLOP:
+            case gameStateManager.gameStates.TURN:
+            case gameStateManager.gameStates.RIVER:
+                setTimeout(() => {
+                    gameStateManager.setGameState(gameStateManager.gameStates.ACTION)
+                    io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
+                }, 4000)
+                break
+            case gameStateManager.gameStates.FLIP:
 
+        }
     })
 
     client.on('disconnect', () => {
         console.log(`${client.id} has disconnected...`)
+        const dcPlayer = playerManager.getPlayers().find(x => x.id === client.id)
+        if (dcPlayer !== undefined) {
+            if (dcPlayer.name !== undefined) {
+                if (gameStateManager.playerDisconnect(dcPlayer.name)) {
+                    io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
+                }
+            }
+        }
+
         let iDelete
         if ((iDelete = playerManager.deletePlayer(client.id)) !== undefined) {
             console.log(`${client.id}, ${iDelete} deleted from players...`)
             io.emit(socketApi.PLAYERS, playerManager.getPlayers().map(x => x.name))
             if (iDelete === 0) {
                 const currentPlayers = playerManager.getPlayers()
-                if (currentPlayers[0]) return
+                if (!currentPlayers[0]) return
                 const clientNewFirstPlayer = currentPlayers[0]
                 io.to(clientNewFirstPlayer.id).emit(socketApi.JOIN_SUCCESS, true, clientNewFirstPlayer.name)
                 console.log(`${clientNewFirstPlayer.id}, ${clientNewFirstPlayer.name} is the new first player...`)
