@@ -1,0 +1,4 @@
+Figure out algorithm to determine who has to reveal, who doesnt
+
+Fix bestHand.js, should return straight on 5, 4, 3, 2, A
+DONE 8-13-2020

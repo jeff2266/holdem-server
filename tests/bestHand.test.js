@@ -46,12 +46,12 @@ expect(
     }
 )
 
-const pocketStraightFlush = [
+const pocketStraightFlush1 = [
     { suit: suits.DIAMONDS, value: '10' },
     { suit: suits.SPADES, value: 'Q' }
 ]
 expect(
-    bestHand(pocketStraightFlush, window)
+    bestHand(pocketStraightFlush1, window)
 ).toEqual(
     {
         cards: [
@@ -60,6 +60,48 @@ expect(
             { suit: suits.SPADES, value: '10' },
             { suit: suits.SPADES, value: '9' },
             { suit: suits.SPADES, value: '8' }
+        ],
+        hand: hands.STRAIGHT_FLUSH
+    }
+)
+
+const window5 = [
+    {
+        suit: suits.SPADES,
+        value: '10'
+    },
+    {
+        suit: suits.DIAMONDS,
+        value: '8'
+    },
+    {
+        suit: suits.SPADES,
+        value: '3'
+    },
+    {
+        suit: suits.SPADES,
+        value: 'A'
+    },
+    {
+        suit: suits.SPADES,
+        value: '2'
+    }
+]
+
+const pocketStraightFlush2 = [
+    { suit: suits.SPADES, value: '5' },
+    { suit: suits.SPADES, value: '4' }
+]
+expect(
+    bestHand(pocketStraightFlush2, window5)
+).toEqual(
+    {
+        cards: [
+            { suit: suits.SPADES, value: '5' },
+            { suit: suits.SPADES, value: '4' },
+            { suit: suits.SPADES, value: '3' },
+            { suit: suits.SPADES, value: '2' },
+            { suit: suits.SPADES, value: 'A' }
         ],
         hand: hands.STRAIGHT_FLUSH
     }
@@ -126,20 +168,62 @@ expect(
     }
 )
 
-const pocketStraight = [
-    { suit: suits.HEARTS, value: 'K' },
-    { suit: suits.DIAMONDS, value: 'Q' }
+const window4 = [
+    {
+        suit: suits.SPADES,
+        value: '10'
+    },
+    {
+        suit: suits.CLUBS,
+        value: '4'
+    },
+    {
+        suit: suits.SPADES,
+        value: '5'
+    },
+    {
+        suit: suits.HEARTS,
+        value: 'A'
+    },
+    {
+        suit: suits.HEARTS,
+        value: 'J'
+    }
+]
+
+const pocketStraight1 = [
+    { suit: suits.HEARTS, value: '2' },
+    { suit: suits.DIAMONDS, value: '3' }
 ]
 expect(
-    bestHand(pocketStraight, window2)
+    bestHand(pocketStraight1, window4)
 ).toEqual(
     {
         cards: [
-            { suit: suits.HEARTS, value: 'A' },
-            { suit: suits.HEARTS, value: 'K' },
-            { suit: suits.DIAMONDS, value: 'Q' },
+            { suit: suits.SPADES, value: '5' },
+            { suit: suits.CLUBS, value: '4' },
+            { suit: suits.DIAMONDS, value: '3' },
+            { suit: suits.HEARTS, value: '2' },
+            { suit: suits.HEARTS, value: 'A' }
+        ],
+        hand: hands.STRAIGHT
+    }
+)
+
+const pocketStraight2 = [
+    { suit: suits.HEARTS, value: '8' },
+    { suit: suits.DIAMONDS, value: '7' }
+]
+expect(
+    bestHand(pocketStraight2, window2)
+).toEqual(
+    {
+        cards: [
             { suit: suits.HEARTS, value: 'J' },
-            { suit: suits.SPADES, value: '10' }
+            { suit: suits.SPADES, value: '10' },
+            { suit: suits.SPADES, value: '9' },
+            { suit: suits.HEARTS, value: '8' },
+            { suit: suits.DIAMONDS, value: '7' },
         ],
         hand: hands.STRAIGHT
     }

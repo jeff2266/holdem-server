@@ -26,6 +26,7 @@ function bestHand(pocket, window) {
             // Is straight flush?
             ofSuitx.sort((a, b) => { return values[b.value] - values[a.value] })
             const ofSuitxValues = ofSuitx.map(x => values[x.value])
+            if (ofSuitxValues[0] === values['A']) ofSuitxValues.push(1)
             for (let i = 0; i <= (ofSuitxValues.length - 5); i++) {
                 let isStraightFlush = true
                 for (let j = 1; j < 5; j++) {
@@ -34,9 +35,14 @@ function bestHand(pocket, window) {
                         break
                     }
                 }
-                if (isStraightFlush) return {
-                    cards: ofSuitx.slice(i, i + 5),
-                    hand: (ofSuitx[i].value == 'A') ? hands.ROYAL_FLUSH : hands.STRAIGHT_FLUSH
+                if (isStraightFlush) {
+                    const cardCt = (ofSuitxValues[i] === 5) ? 4 : 5
+                    let straightFlushHand = ofSuitx.slice(i, i + cardCt)
+                    if (cardCt === 4) straightFlushHand.push(ofSuitx.find(x => x.value == 'A'))
+                    return {
+                        cards: straightFlushHand,
+                        hand: (straightFlushHand[0].value == 'A') ? hands.ROYAL_FLUSH : hands.STRAIGHT_FLUSH
+                    }
                 }
             }
 
@@ -110,19 +116,22 @@ function bestHand(pocket, window) {
     // Straight will have at least five unique values
     if (uniqueValues.length >= 5) {
         const uniqueValuesNumeric = uniqueValues.map(x => values[x])
-        for (let i = 0; i <= 2; i++) {
+        if (uniqueValuesNumeric[0] === values['A']) uniqueValuesNumeric.push(1)
+        for (let i = 0; i <= (uniqueValuesNumeric.length - 5); i++) {
             let isStraight = true
             for (let j = 1; j < 5; j++) {
-                if (uniqueValuesNumeric[i + j] != uniqueValuesNumeric[i + j - 1] - 1) {
+                if (uniqueValuesNumeric[i + j] !== uniqueValuesNumeric[i + j - 1] - 1) {
                     isStraight = false
                     break
                 }
             }
             if (isStraight) {
                 let straightHand = []
-                for (let i = 0; i < 5; i++) {
-                    straightHand.push(allCards.find(x => x.value == uniqueValues[i]))
+                const cardCt = (uniqueValuesNumeric[i] === 5) ? 4 : 5
+                for (let k = i; k < i + cardCt; k++) {
+                    straightHand.push(allCards.find(x => x.value == uniqueValues[k]))
                 }
+                if (cardCt === 4) straightHand.push(allCards.find(x => x.value == 'A'))
                 return {
                     cards: straightHand,
                     hand: hands.STRAIGHT

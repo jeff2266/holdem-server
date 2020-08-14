@@ -69,7 +69,10 @@ const gameStates = {
     ACTION_PRE_FLOP: {
         message: () => {
             const actionPlayer = playerStates.find(x => x.isTurn)
-            if (actionPlayer) return `Action to ${actionPlayer.name}, \$${actionPlayer.toCall} to call`
+            if (actionPlayer) {
+                if (actionPlayer.toCall === 0) return `Action to ${actionPlayer.name}, check or raise`
+                return `Action to ${actionPlayer.name}, \$${actionPlayer.toCall} to call`
+            }
             return null
         },
         onEnter: () => {
@@ -95,7 +98,10 @@ const gameStates = {
     ACTION: {
         message: () => {
             const actionPlayer = playerStates.find(x => x.isTurn)
-            if (actionPlayer) return `Action to ${actionPlayer.name}, \$${actionPlayer.toCall} to call`
+            if (actionPlayer) {
+                if (actionPlayer.toCall === 0) return `Action to ${actionPlayer.name}, check or raise`
+                return `Action to ${actionPlayer.name}, \$${actionPlayer.toCall} to call`
+            }
             return null
         },
         onEnter: () => {
@@ -238,7 +244,6 @@ function playerAction(name, amount) {
             firstAction = iPlayer
         }
     }
-    console.log(playerStates.map((x) => { return { name: x.name, balance: x.balance } }), playerStates[firstAction].name)
     do {
         iPlayer = (iPlayer + 1) % playerStates.length
     } while (playerStates[iPlayer].name === null || playerStates[iPlayer].pocket.length < 2)
