@@ -6,6 +6,7 @@ const socketio = require('socket.io')
 const socketApi = require('./socketApi')
 const gameStateManager = require('./gameStateManager')
 const playerManager = require('./playerManager')
+const { setGameState } = require('./gameStateManager')
 
 const app = express()
 const server = http.createServer(app)
@@ -48,27 +49,15 @@ io.on('connection', (client) => {
 
         io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
 
-        setTimeout(() => {
-            gameStateManager.setGameState(gameStateManager.gameStates.SHUFFLE_AND_BLINDS_SET)
+        newHand()
+
+        if (gameStateManager.getGameState() === gameStateManager.gameStates.GAME_OVER)
             io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
-            setTimeout(() => {
-                gameStateManager.setGameState(gameStateManager.gameStates.DEAL)
-                io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
-                setTimeout(() => {
-                    gameStateManager.setGameState(gameStateManager.gameStates.PLACE_BLINDS)
-                    io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
-                    setTimeout(() => {
-                        gameStateManager.setGameState(gameStateManager.gameStates.ACTION_PRE_FLOP)
-                        io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
-                    }, 2800)
-                }, 1500)
-            }, 2800)
-        }, 4000)
     })
 
     client.on('c_action', (amount) => {
         const playerName = playerManager.getPlayers().find(x => x.id === client.id).name
-        const nextState = gameStateManager.playerAction(playerName, amount)
+        let nextState = gameStateManager.playerAction(playerName, amount)
         switch (nextState) {
             case -1:
                 return
@@ -88,9 +77,18 @@ io.on('connection', (client) => {
                     gameStateManager.setGameState(gameStateManager.gameStates.ACTION)
                     io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
                 }, 4000)
-                break
+                return
             case gameStateManager.gameStates.FLIP:
-
+                setTimeout(() => {
+                    distributePots()
+                }, 7000)
+                break
+            case gameStateManager.gameStates.FIND_WINNERS:
+                distributePots()
+                break
+            case gameStateManager.gameStates.GAME_OVER:
+                io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
+                break
         }
     })
 
@@ -120,6 +118,41 @@ io.on('connection', (client) => {
     })
 
 })
+
+function newHand() {
+    setTimeout(() => {
+        gameStateManager.setGameState(gameStateManager.gameStates.SHUFFLE_AND_BLINDS_SET)
+        io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
+        setTimeout(() => {
+            gameStateManager.setGameState(gameStateManager.gameStates.DEAL)
+            io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
+            setTimeout(() => {
+                gameStateManager.setGameState(gameStateManager.gameStates.PLACE_BLINDS)
+                io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
+                setTimeout(() => {
+                    gameStateManager.setGameState(gameStateManager.gameStates.ACTION_PRE_FLOP)
+                    io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
+                }, 2800)
+            }, 1500)
+        }, 2800)
+    }, 4000)
+}
+
+function distributePots() {
+    gameStateManager.setGameState(gameStateManager.gameStates.FIND_WINNERS)
+    let nextState = gameStateManager.setGameState(gameStateManager.gameStates.DIST_POTS)
+    io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
+    setTimeout(() => {
+        if (nextState === gameStateManager.gameStates.FIND_WINNERS) distributePots()
+        else if (nextState === gameStateManager.gameStates.SHUFFLE_AND_BLINDS_SET) newHand()
+        else if (nextState === gameStateManager.gameStates.GAME_OVER) {
+            setTimeout(() => {
+                gameStateManager.setGameState(gameStateManager.gameStates.GAME_OVER)
+                io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
+            })
+        }
+    }, 3000)
+}
 
 app.use(express.static(path.join(__dirname, '../public')))
 server.listen(port, () => { console.log(`The server is running on port ${port}`) })

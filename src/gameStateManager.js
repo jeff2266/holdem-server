@@ -1,13 +1,20 @@
 const newDeck = require('./utils/shuffler')
+const bestHand = require('./utils/bestHand')
+const findWinner = require('./utils/findWinner')
 
 let isPlay = false
 let startBalance
+let numPlayersOut = 0
+let currPot = 0
+let winner = null
+
 let window = []
 let minBet
 let playerStates = []
 let firstAction
 let deck
 let pots = []
+let winners = []
 
 const gameStates = {
     WELCOME: {
@@ -16,17 +23,31 @@ const gameStates = {
     SHUFFLE_AND_BLINDS_SET: {
         message: () => "Shuffling and setting blinds",
         onEnter: () => {
+            let deadPlayers = playerStates.filter(x => x.name !== null && x.balance === 0)
+            if (deadPlayers.length > 0) console.log(deadPlayers.map(x => x.name).join(', ') + ' out')
+            numPlayersOut += deadPlayers.length
+            deadPlayers.forEach(x => {
+                x.name = null
+            })
             updateBlinds()
             resetTurn()
             window = []
+            minBet = (startBalance / 10) * (numPlayersOut + 1)
             playerStates.forEach(x => {
                 x.pocket = []
                 x.bet = 0
                 x.isTurn = false
                 x.toCall = 0
+                x.bestHand = {
+                    cards: [],
+                    hand: null
+                }
             })
             deck = newDeck()
             pots = []
+            winners = []
+
+            return gameStates.DEAL
         }
     },
     DEAL: {
@@ -34,6 +55,8 @@ const gameStates = {
         onEnter: () => {
             playerStates.filter(x => (x.name !== null)).forEach(x => x.pocket.push(deck.pop()))
             playerStates.filter(x => (x.name !== null)).forEach(x => x.pocket.push(deck.pop()))
+
+            return gameStates.PLACE_BLINDS
         }
     },
     PLACE_BLINDS: {
@@ -64,6 +87,8 @@ const gameStates = {
                 big.balance = 0
                 pots.push(new Pot())
             }
+
+            return gameStates.ACTION_PRE_FLOP
         }
     },
     ACTION_PRE_FLOP: {
@@ -84,6 +109,8 @@ const gameStates = {
                 resetTurn(iAction)
                 firstAction = iAction
             }
+
+            return gameStates.FLOP
         }
     },
     FLOP: {
@@ -93,6 +120,8 @@ const gameStates = {
             window.push(deck.pop())
             window.push(deck.pop())
             window.push(deck.pop())
+
+            return gameStates.ACTION
         }
     },
     ACTION: {
@@ -105,14 +134,20 @@ const gameStates = {
             return null
         },
         onEnter: () => {
-            debugger
             let iAction = playerStates.findIndex(x => x.blind.includes('D'))
             if (iAction > -1) {
                 do {
                     iAction = (iAction + 1) % playerStates.length
-                } while (playerStates[iAction].name === null)
+                } while (playerStates[iAction].name === null || playerStates[iAction].pocket.length < 2)
                 resetTurn(iAction)
                 firstAction = iAction
+            }
+
+            switch (window.length) {
+                case 3: return gameStates.TURN
+                case 4: return gameStates.RIVER
+                case 5: return gameStates.FLIP
+                default: return
             }
         }
     },
@@ -121,6 +156,7 @@ const gameStates = {
         onEnter: () => {
             deck.pop()
             window.push(deck.pop())
+            return gameStates.ACTION
         }
     },
     RIVER: {
@@ -128,12 +164,71 @@ const gameStates = {
         onEnter: () => {
             deck.pop()
             window.push(deck.pop())
+            return gameStates.ACTION
         }
     },
-    FLIP: {},
-    FIND_WINNERS: {},
-    DIST_POTS: {},
-    GAME_OVER: {}
+    FLIP: {
+        message: () => "Players reveal cards",
+        onEnter: () => {
+            playerStates.forEach((x) => {
+                if (x.name !== null && x.pocket.length > 0) {
+                    x.cardsUp = true
+                }
+            })
+            pots = pots.filter(x => x.amount !== 0)
+            return gameStates.FIND_WINNERS
+        }
+    },
+    FIND_WINNERS: {
+        message: () => "...",
+        onEnter: () => {
+            const playersLeft = playerStates.filter(x => x.name !== null && x.pocket.length > 0)
+            if (playersLeft.length === 1) {
+                winners = [playersLeft[0].name]
+                return gameStates.DIST_POTS
+            }
+            playersLeft.forEach(x => x.bestHand = bestHand(x.pocket, window))
+            winners = findWinner(playersLeft.map((x) => {
+                return {
+                    cards: x.bestHand.cards,
+                    hand: x.bestHand.hand,
+                    id: x.name
+                }
+            }))
+            return gameStates.DIST_POTS
+        }
+    },
+    DIST_POTS: {
+        message: () => {
+            return (winners.length > 1) ?
+                winners.join(', ') + ` split \$${currPot}`
+                : winners[0] + ` wins \$${currPot}`
+        },
+        onEnter: () => {
+            if (pots.length > 1) {
+                winners.filter(x => pots[0].claim.includes(x)).map(x => playerStates.find(y => y.name === x)).forEach(wState => {
+                    wState.balance += Math.floor(pots[0].amount / winners.length)
+                })
+                currPot = pots.shift().amount
+                return gameStates.FIND_WINNERS
+            } else if (pots.length === 1) {
+                winners.filter(x => pots[0].claim.includes(x)).map(x => playerStates.find(y => y.name === x)).forEach(wState => {
+                    wState.balance += Math.floor(pots[0].amount / winners.length)
+                })
+                currPot = pots.shift().amount
+                if (playerStates.filter(x => x.name !== null && x.balance > 0).length == 1) {
+                    winner = playerStates.find(x => x.name !== null && x.balance > 0).name
+                    return gameStates.GAME_OVER
+                }
+                return gameStates.SHUFFLE_AND_BLINDS_SET
+            }
+        }
+    },
+    GAME_OVER: {
+        message: () => {
+            return winner + ' wins!'
+        }
+    }
 }
 let gameState = gameStates.WELCOME
 
@@ -150,6 +245,10 @@ function PlayerState(name = null, balance = 0) {
     this.bet = 0
     this.isTurn = false
     this.toCall = 0
+    this.bestHand = {
+        cards: [],
+        hand: null
+    }
 }
 
 function Pot() {
@@ -162,25 +261,26 @@ function Pot() {
 function setGameState(newGameState) {
     if (gameState === newGameState) return
     gameState = newGameState
-    if (gameState.onEnter) gameState.onEnter()
+    if (!gameState.onEnter) return
+    return gameState.onEnter()
 }
 
 function newGame(players) {
     gameState = gameStates.WELCOME
 
+    numStartingPlayers = players.length
     startBalance = Math.ceil((1000 / players.length) / 100) * 100
     players.forEach(x => playerStates.push(new PlayerState(x, startBalance)))
     for (let i = playerStates.length; i < 8; i++) {
         playerStates.push(new PlayerState())
     }
-    minBet = startBalance / 10
 
     isPlay = true
 }
 
 function updateBlinds() {
     let iBlinds
-    if ((iBlinds = playerStates.filter(x => x !== null).findIndex(x => x.blind.includes('D'))) < 0) {
+    if ((iBlinds = playerStates.findIndex(x => x.blind.includes('D'))) < 0) {
         let i = 0
         playerStates[i++].blind.push('D')
         while (playerStates[i].name === null) i = (i + 1) % playerStates.length
@@ -189,19 +289,19 @@ function updateBlinds() {
         while (playerStates[i].name === null) i = (i + 1) % playerStates.length
         playerStates[i].blind.push('B')
     } else {
-        playerStates.forEach(x => { if (x !== null) x.blind = [] })
+        playerStates.forEach(x => x.blind = [])
         do {
             iBlinds = (iBlinds + 1) % playerStates.length
         } while (playerStates[iBlinds].name === null)
-        playerStates[iBlinds].bets.push('D')
+        playerStates[iBlinds].blind.push('D')
         do {
             iBlinds = (iBlinds + 1) % playerStates.length
         } while (playerStates[iBlinds].name === null)
-        playerStates[iBlinds].bets.push('S')
+        playerStates[iBlinds].blind.push('S')
         do {
             iBlinds = (iBlinds + 1) % playerStates.length
         } while (playerStates[iBlinds].name === null)
-        playerStates[iBlinds].bets.push('B')
+        playerStates[iBlinds].blind.push('B')
     }
 }
 
@@ -244,6 +344,14 @@ function playerAction(name, amount) {
             firstAction = iPlayer
         }
     }
+
+    resetTurn()
+
+    // Check if one player left
+    if (playerStates.filter(x => x.name !== null && x.pocket.length > 0).length === 1) {
+        return gameStates.FIND_WINNERS
+    }
+
     do {
         iPlayer = (iPlayer + 1) % playerStates.length
     } while (playerStates[iPlayer].name === null || playerStates[iPlayer].pocket.length < 2)
@@ -287,6 +395,11 @@ function playerDisconnect(name) {
     }
     playerStates[iDCPlayer].pocket = []
     playerStates[iDCPlayer].name = null
+    numPlayersOut++
+    if (playerStates.filter(x => x.name !== null && x.balance > 0).length == 1) {
+        winner = playerStates.find(x => x.name !== null && x.balance > 0).name
+        setGameState(gameStates.GAME_OVER)
+    }
     return true
 }
 

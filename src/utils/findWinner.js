@@ -3,7 +3,7 @@ const { values } = require('./cards')
 
 /**
  * Takes in an array of hands and returns the player id of the winning hand
- * @param {{cards: {suit: string, value: string}[], hand: Object, id: number}} handsArray Array of players' hands
+ * @param {{cards: {suit: string, value: string}[], hand: Object, id}} handsArray Array of players' hands
  */
 function findWinner(handsArray) {
     // Find best hand

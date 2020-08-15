@@ -1,4 +1,11 @@
+On player's action, raise select should be set to lowest amount (check -> $0, call -> toCall)
+DONE 8-15-2020
+
 Figure out algorithm to determine who has to reveal, who doesnt
+
+Validate username
+
+Server emit sound effects on check, call, raise, fold
 
 Fix bestHand.js, should return straight on 5, 4, 3, 2, A
 DONE 8-13-2020
