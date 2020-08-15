@@ -22,7 +22,7 @@ io.on('connection', (client) => {
     client.on('c_join', ({ name, password }) => {
 
         console.log(`${name} trying to join with password, '${password}'...`)
-        if (password === '123') {
+        if (password === 'covid2020') {
             const playerID = playerManager.addPlayer(name, client.id)
             if (playerID < 0 || gameStateManager.getIsPlay()) {
                 client.emit(socketApi.JOIN_FAILED)
