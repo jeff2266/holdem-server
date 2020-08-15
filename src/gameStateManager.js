@@ -35,6 +35,7 @@ const gameStates = {
             minBet = (startBalance / 10) * (numPlayersOut + 1)
             playerStates.forEach(x => {
                 x.pocket = []
+                x.cardsUp = false
                 x.bet = 0
                 x.isTurn = false
                 x.toCall = 0
