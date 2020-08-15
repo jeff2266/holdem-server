@@ -154,5 +154,5 @@ function distributePots() {
     }, 3000)
 }
 
-app.use(express.static(path.join(__dirname, '../build')))
+app.use(express.static(path.join(__dirname, '../public')))
 server.listen(port, () => { console.log(`The server is running on port ${port}`) })
