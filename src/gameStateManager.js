@@ -269,6 +269,9 @@ function setGameState(newGameState) {
 
 function newGame(players) {
     playerStates = []
+    numPlayersOut = 0
+    currPot = 0
+    winner = null
     gameState = gameStates.WELCOME
 
     numStartingPlayers = players.length
