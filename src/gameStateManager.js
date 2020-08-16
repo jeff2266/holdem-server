@@ -335,7 +335,7 @@ function playerAction(name, amount) {
     else if (amount < player.toCall) {
         // All in
         if (amount === player.balance) {
-            player.balance === 0
+            player.balance = 0
             player.bet += amount
             pots[pots.length - 1].amount += amount
             pots.push(new Pot())
