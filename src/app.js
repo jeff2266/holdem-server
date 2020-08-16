@@ -51,8 +51,10 @@ io.on('connection', (client) => {
 
         newHand()
 
-        if (gameStateManager.getGameState() === gameStateManager.gameStates.GAME_OVER)
+        if (gameStateManager.getGameState() === gameStateManager.gameStates.GAME_OVER) {
             io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
+            playerManager.clearAllPlayers()
+        }
     })
 
     client.on('c_action', (amount) => {
@@ -88,6 +90,7 @@ io.on('connection', (client) => {
                 break
             case gameStateManager.gameStates.GAME_OVER:
                 io.emit(socketApi.GUI_STATE, gameStateManager.getGuiState())
+                playerManager.clearAllPlayers()
                 break
         }
     })

@@ -14,8 +14,12 @@ function deletePlayer(id) {
     return iDelete
 }
 
+function clearAllPlayers() {
+    players = []
+}
+
 function getPlayers() {
     return players
 }
 
-module.exports = { addPlayer, deletePlayer, getPlayers }
+module.exports = { addPlayer, deletePlayer, clearAllPlayers, getPlayers }

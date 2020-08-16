@@ -228,7 +228,8 @@ const gameStates = {
     GAME_OVER: {
         message: () => {
             return winner + ' wins!'
-        }
+        },
+        onEnter: () => { isPlay = false }
     }
 }
 let gameState = gameStates.WELCOME
@@ -267,6 +268,7 @@ function setGameState(newGameState) {
 }
 
 function newGame(players) {
+    playerStates = []
     gameState = gameStates.WELCOME
 
     numStartingPlayers = players.length
