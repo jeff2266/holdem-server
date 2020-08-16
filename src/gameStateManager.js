@@ -272,6 +272,7 @@ function newGame(players) {
     numPlayersOut = 0
     currPot = 0
     winner = null
+    window = []
     gameState = gameStates.WELCOME
 
     numStartingPlayers = players.length
